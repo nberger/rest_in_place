@@ -33,7 +33,7 @@ RestInPlaceEditor.prototype = {
         });
       }
     });
-    editor.element.html("saving...");
+    editor.element.html("guardando...");
   },
   
   activateForm : function() {
