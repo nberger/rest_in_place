@@ -2,6 +2,9 @@ function RestInPlaceEditor(e) {
   this.element = jQuery(e);
   this.initOptions();
   this.bindForm();
+
+  var isEmpty = (jQuery.trim(this.element.html()) == '');
+  if (isEmpty) this.element.html(emptyText);
   
   this.element.bind('click', {editor: this}, this.clickHandler);
 }
@@ -50,6 +53,8 @@ RestInPlaceEditor.prototype = {
       self.formType      = self.formType      || jQuery(this).attr("data-formtype");
       self.objectName    = self.objectName    || jQuery(this).attr("data-object");
       self.attributeName = self.attributeName || jQuery(this).attr("data-attribute");
+      self.emptyText     = self.emptyText     || jQuery(this).attr("data-emptytext");
+      self.emptyValue    = self.emptyValue    || jQuery(this).attr("data-emptyvalue");
     });
     // Try Rails-id based if parents did not explicitly supply something
     self.element.parents().each(function(){
@@ -63,6 +68,8 @@ RestInPlaceEditor.prototype = {
     self.formType      = self.element.attr("data-formtype")  || self.formtype || "input";
     self.objectName    = self.element.attr("data-object")    || self.objectName;
     self.attributeName = self.element.attr("data-attribute") || self.attributeName;
+    self.emptyText     = self.element.attr("data-emptytext") || self.emptyText;
+    self.emptyValue    = self.element.attr("data-emptyvalue")|| self.emptyValue;
   },
   
   bindForm : function() {
@@ -96,7 +103,10 @@ RestInPlaceEditor.prototype = {
   loadSuccessCallback : function(data) {
     //jq14: data as JS object, not string.
     if (jQuery.fn.jquery < "1.4") data = eval('(' + data + ')' );
-    this.element.html(data[this.objectName][this.attributeName]);
+    var newValue = data[this.objectName][this.attributeName];
+    isEmpty = ($.trim(newValue.toString()) == '');
+    displayValue = isEmpty ? this.emptyText : newValue;
+    this.element.html(displayValue);
     this.element.bind('click', {editor: this}, this.clickHandler);    
   },
   
@@ -110,7 +120,9 @@ RestInPlaceEditor.forms = {
   "input" : {
     /* is bound to the editor and called to replace the element's content with a form for editing data */
     activateForm : function() {
-      this.element.html('<form action="javascript:void(0)" style="display:inline;"><input type="text" value="' + this.oldValue + '"></form>');
+      isEmpty = ($.trim(this.oldValue.toString()) == '');
+      var displayValue = isEmpty ? this.emptyValue : this.oldValue;
+      this.element.html('<form action="javascript:void(0)" style="display:inline;"><input type="text" value="' + displayValue + '"></form>');
       this.element.find('input')[0].select();
       this.element.find("form")
         .bind('submit', {editor: this}, RestInPlaceEditor.forms.input.submitHandler);
@@ -135,7 +147,9 @@ RestInPlaceEditor.forms = {
   "textarea" : {
     /* is bound to the editor and called to replace the element's content with a form for editing data */
     activateForm : function() {
-      this.element.html('<form action="javascript:void(0)" style="display:inline;"><textarea>' + this.oldValue + '</textarea></form>');
+      isEmpty = ($.trim(this.oldValue.toString()) == '');
+      var displayValue = isEmpty ? this.emptyValue : this.oldValue;
+      this.element.html('<form action="javascript:void(0)" style="display:inline;"><textarea>' + displayValue + '</textarea></form>');
       this.element.find('textarea')[0].select();
       this.element.find("textarea")
         .bind('blur', {editor: this}, RestInPlaceEditor.forms.textarea.blurHandler);
